@@ -61,7 +61,7 @@ service Actor {
         };
     }
 
-    rpc GetPosition(Empty) returns (UpdatePositionResponse) {
+    rpc GetPosition(Empty) returns (GetPositionResponse) {
         option (google.api.http) = {
             get: "/position"
         };

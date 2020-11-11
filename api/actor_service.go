@@ -22,7 +22,7 @@ func StartActor(failProbability int) (*Actor, error) {
 	}, nil
 }
 
-func (a *Actor) UpdatePosition(ctx context.Context, req UpdatePositionRequest) (*UpdatePositionResponse, error) {
+func (a *Actor) UpdatePosition(ctx context.Context, req *UpdatePositionRequest) (*UpdatePositionResponse, error) {
 	rand.Seed(time.Now().UnixNano())
 	// range for random Number is 0 - 100
 	// check if "failed" attempt
@@ -36,7 +36,7 @@ func (a *Actor) UpdatePosition(ctx context.Context, req UpdatePositionRequest) (
 	}
 }
 
-func (a *Actor) GetPosition(context context.Context, req Empty) (*GetPositionResponse, error) {
+func (a *Actor) GetPosition(context context.Context, req *Empty) (*GetPositionResponse, error) {
 	rand.Seed(time.Now().UnixNano())
 	// range for random Number is 0 - 100
 	// check if "failed" attempt
