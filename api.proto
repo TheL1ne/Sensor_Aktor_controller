@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package api;
+
+import "google/api/annotations.proto";
+
+option go_package = "api";
+
+message Empty {}
+
+
+message Measurement {
+    double Value = 1;
+    int64 time = 2;
+    string unit = 3;
+}
+
+message GetHistoryRequest {
+    int64 from = 1;
+    int64 until = 2;
+}
+
+message GetHistoryResponse {
+    repeated double Values = 1;
+    string unit = 2;
+}
+
+service Controller {
+    rpc UpdateMeasurement(Measurement) returns (Empty) {
+        option (google.api.http) = {
+            post: "/measurement/update"
+            body: "*"
+        };
+    }
+
+    // in our example the controller will also be the database
+    rpc GetHistory(GetHistoryRequest) returns (GetHistoryResponse) {
+        option (google.api.http) = {
+            get: "/history"
+        };
+    }
+}
+
+message UpdatePositionRequest {
+    double position = 1;
+}
+
+message UpdatePositionResponse {
+    double reached_position = 1;
+}
+
+message GetPositionResponse {
+    double position = 1;
+}
+
+service Actor {
+    rpc UpdatePosition(UpdatePositionRequest) returns (UpdatePositionResponse) {
+        option (google.api.http) = {
+            post: "/position/update"
+            body: "*"
+        };
+    }
+
+    rpc GetPosition(Empty) returns (UpdatePositionResponse) {
+        option (google.api.http) = {
+            get: "/position"
+        };
+    }
+}
