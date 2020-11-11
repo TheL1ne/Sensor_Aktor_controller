@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net"
 
@@ -11,11 +10,13 @@ import (
 )
 
 func main() {
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", 8080))
+	// controllers address
+	lis, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
+	// TODO: change probablity of failure here
 	s, err := api.StartActor(0)
 	if err != nil {
 		zap.L().Fatal("could not start ActorServer", zap.Error(err))
