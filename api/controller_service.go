@@ -7,10 +7,10 @@ import (
 
 type Controller struct {
 	values []float64
-	actor  *Actor
+	actor  *ActorClient
 }
 
-func StartController(actor *Actor) (*Controller, error) {
+func StartController(actor *ActorClient) (*Controller, error) {
 	if actor == nil {
 		return nil, fmt.Errorf("Actor must be set")
 	}
