@@ -17,7 +17,7 @@ func main() {
 	}
 
 	// TODO: change probablity of failure here
-	s, err := api.StartActor(0)
+	s, err := api.StartActor()
 	if err != nil {
 		zap.L().Fatal("could not start ActorServer", zap.Error(err))
 	}

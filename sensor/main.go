@@ -31,7 +31,7 @@ func main() {
 
 	controller := api.NewControllerClient(conn)
 
-	sensor, err := api.NewSensor(intervall, failProbability, controller)
+	sensor, err := api.NewSensor(intervall, controller)
 	done := sensor.StartSensor()
 	defer close(done)
 	zap.L().Info("started sensor, waiting for Signal...")
