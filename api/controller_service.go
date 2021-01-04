@@ -6,8 +6,11 @@ import (
 )
 
 type Controller struct {
-	values []float64
-	actor  *ActorClient
+	values             []float64
+	actor              *ActorClient
+	presentError       *ErrorRequest
+	lastErrorTriggered bool
+	notifyErrorTrigger chan interface{}
 }
 
 func StartController(actor *ActorClient) (*Controller, error) {
@@ -15,8 +18,10 @@ func StartController(actor *ActorClient) (*Controller, error) {
 		return nil, fmt.Errorf("Actor must be set")
 	}
 	return &Controller{
-		values: []float64{},
-		actor:  actor,
+		values:             []float64{},
+		actor:              actor,
+		presentError:       nil,
+		lastErrorTriggered: false,
 	}, nil
 }
 
@@ -33,4 +38,15 @@ func (c *Controller) GetHistory(ctx context.Context, req *GetHistoryRequest) (*G
 	return &GetHistoryResponse{
 		Values: c.values,
 	}, nil
+}
+
+func (c *Controller) SetError(ctx context.Context, req *ErrorRequest) (*Empty, error) {
+	if c.lastErrorTriggered {
+		c.presentError = req
+	} else {
+		// wait for the previous error to be triggerd at least once
+		<-c.notifyErrorTrigger
+		c.presentError = req
+	}
+	return &Empty{}, nil
 }

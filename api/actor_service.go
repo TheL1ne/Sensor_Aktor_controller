@@ -2,49 +2,41 @@ package api
 
 import (
 	"context"
-	fmt "fmt"
-	"math/rand"
-	"time"
 )
 
 type Actor struct {
-	position        float64
-	failProbability int // expected to be 0-100 as percentage
+	position           float64
+	presentError       *ErrorRequest
+	lastErrorTriggered bool
+	notifyErrorTrigger chan interface{}
 }
 
-func StartActor(failProbability int) (*Actor, error) {
-	if failProbability > 100 || failProbability < 0 {
-		return nil, fmt.Errorf("failProbability must be between 0 and 100 but was %d", failProbability)
-	}
+func StartActor() (*Actor, error) {
 	return &Actor{
-		position:        -1, // to mark not initialized position
-		failProbability: failProbability,
+		position: -1, // to mark not initialized position
 	}, nil
 }
 
 func (a *Actor) UpdatePosition(ctx context.Context, req *UpdatePositionRequest) (*UpdatePositionResponse, error) {
-	rand.Seed(time.Now().UnixNano())
-	// range for random Number is 0 - 100
-	// check if "failed" attempt
-	if a.failProbability >= rand.Intn(100) {
-		return nil, fmt.Errorf("i feel like failing")
-	} else {
-		a.position = req.GetPosition()
-		return &UpdatePositionResponse{
-			ReachedPosition: req.GetPosition(),
-		}, nil
-	}
+	a.position = req.GetPosition()
+	return &UpdatePositionResponse{
+		ReachedPosition: req.GetPosition(),
+	}, nil
 }
 
 func (a *Actor) GetPosition(context context.Context, req *Empty) (*GetPositionResponse, error) {
-	rand.Seed(time.Now().UnixNano())
-	// range for random Number is 0 - 100
-	// check if "failed" attempt
-	if a.failProbability >= rand.Intn(100) {
-		return nil, fmt.Errorf("i feel like failing")
+	return &GetPositionResponse{
+		Position: a.position,
+	}, nil
+}
+
+func (a *Actor) SetError(ctx context.Context, req *ErrorRequest) (*Empty, error) {
+	if a.lastErrorTriggered {
+		a.presentError = req
 	} else {
-		return &GetPositionResponse{
-			Position: a.position,
-		}, nil
+		// wait for the previous error to be triggerd at least once
+		<-a.notifyErrorTrigger
+		a.presentError = req
 	}
+	return &Empty{}, nil
 }

@@ -6,13 +6,35 @@ import "google/api/annotations.proto";
 
 option go_package = ".;api";
 
-message Empty {}
+enum Unit {
+    scalar = 0;
+    degree_celsius = 1;
+    RPM = 2;
+    angle_degree = 3;
+    distance_millimeter = 4;
+    distance_meter = 5;
+}
 
+enum Error{
+    missing_packet = 0;
+    late = 1;
+    early = 2;
+    empty = 3;
+    flood = 4;
+}
+
+message ErrorRequest{
+    int64 time = 1;
+    int32 milliseconds = 2; // time the error is present
+    Error type = 3;
+}
+
+message Empty {}
 
 message Measurement {
     double Value = 1;
     int64 time = 2;
-    string unit = 3;
+    Unit unit = 3;
 }
 
 message GetHistoryRequest {
@@ -22,7 +44,7 @@ message GetHistoryRequest {
 
 message GetHistoryResponse {
     repeated double Values = 1;
-    string unit = 2;
+    Unit unit = 2;
 }
 
 service Controller {
@@ -37,6 +59,12 @@ service Controller {
     rpc GetHistory(GetHistoryRequest) returns (GetHistoryResponse) {
         option (google.api.http) = {
             get: "/history"
+        };
+    }
+
+    rpc SetError (ErrorRequest) returns (Empty) {
+        option (google.api.http) = {
+            post: "/nexterror"
         };
     }
 }
@@ -64,6 +92,20 @@ service Actor {
     rpc GetPosition(Empty) returns (GetPositionResponse) {
         option (google.api.http) = {
             get: "/position"
+        };
+    }
+
+    rpc SetError (ErrorRequest) returns (Empty) {
+        option (google.api.http) = {
+            post: "/nexterror"
+        };
+    }
+}
+
+service Sensor {
+    rpc SetError (ErrorRequest) returns (Empty) {
+        option (google.api.http) = {
+            post: "/nexterror"
         };
     }
 }
