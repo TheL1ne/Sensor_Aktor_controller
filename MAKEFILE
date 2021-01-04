@@ -1,0 +1,5 @@
+build actor:
+	Get-Content Dockerfile_actor | docker build -t actor -
+
+proto:
+	(cd api && protoc --go_out=plugins=grpc:. api.proto)
