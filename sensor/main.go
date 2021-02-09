@@ -12,7 +12,7 @@ import (
 
 var (
 	// intervall of reports in Milliseconds
-	intervall = 300
+	intervall = int64(300)
 	// in percent
 	failProbability = 0
 )

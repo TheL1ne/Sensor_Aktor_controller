@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"time"
 )
 
 type Actor struct {
@@ -18,6 +19,20 @@ func StartActor() (*Actor, error) {
 }
 
 func (a *Actor) UpdatePosition(ctx context.Context, req *UpdatePositionRequest) (*UpdatePositionResponse, error) {
+	if a.presentError != nil {
+		switch a.presentError.Type {
+		// skipped 2 errors because:
+		// can't flood from request
+		// can't return early
+		case Error_missing_packet:
+			return nil, nil
+		case Error_late:
+			time.Sleep(1 * time.Second)
+
+		case Error_empty:
+			return &UpdatePositionResponse{}, nil
+		}
+	}
 	a.position = req.GetPosition()
 	return &UpdatePositionResponse{
 		ReachedPosition: req.GetPosition(),

@@ -27,7 +27,7 @@ func main() {
 
 	actor := api.NewActorClient(conn)
 
-	controller, err := api.StartController(&actor)
+	controller, err := api.StartController(actor)
 	if err != nil {
 		zap.L().Fatal("could not start ControllerServer", zap.Error(err))
 	}

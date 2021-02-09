@@ -18,7 +18,6 @@ enum Unit {
 enum Error{
     missing_packet = 0;
     late = 1;
-    early = 2;
     empty = 3;
     flood = 4;
 }
