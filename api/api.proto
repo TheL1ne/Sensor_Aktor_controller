@@ -46,6 +46,28 @@ message GetHistoryResponse {
     Unit unit = 2;
 }
 
+message DatabaseRequest {
+    enum EventType {
+        measurement = 0;
+        historyRequest = 1;
+        historyResponse = 2;
+        ErrorRequest = 3;
+        Empty = 4;
+        UpdatePositionRequest = 5;
+        UpdatePositionResponse = 6;
+        GetPositioneResponse = 7;
+    }
+    enum Receiver {
+        controller = 0;
+        actor = 1;
+        sensor = 2;
+    }
+    int64 time = 1;
+    EventType type = 2;
+    bool wasEmpty = 3;
+    Receiver receiver = 4;
+}
+
 service Controller {
     rpc UpdateMeasurement(Measurement) returns (Empty) {
         option (google.api.http) = {
@@ -69,15 +91,18 @@ service Controller {
 }
 
 message UpdatePositionRequest {
-    double position = 1;
+    int64 time = 1;
+    double position = 2;
 }
 
 message UpdatePositionResponse {
-    double reached_position = 1;
+    int64 time = 1;
+    double reached_position = 2;
 }
 
 message GetPositionResponse {
-    double position = 1;
+    int64 time = 1;
+    double position = 2;
 }
 
 service Actor {
@@ -105,6 +130,14 @@ service Sensor {
     rpc SetError (ErrorRequest) returns (Empty) {
         option (google.api.http) = {
             post: "/nexterror"
+        };
+    }
+}
+
+service Database {
+    rpc SaveEvent(DatabaseRequest) returns (Empty) {
+        option (google.api.http) = {
+            post: "/saveevent"
         };
     }
 }
