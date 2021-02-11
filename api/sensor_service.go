@@ -10,14 +10,13 @@ import (
 
 // represents a Sensor which has an Interval of milliseconds until new update
 type Sensor struct {
-	intervall          int64
-	controller         ControllerClient
-	presentError       *ErrorRequest
-	lastErrorTriggered bool
-	notifyErrorTrigger chan interface{}
+	intervall    int64
+	controller   ControllerClient
+	presentError *ErrorRequest
+	database     databaseClient
 }
 
-func NewSensor(intervall int64, con ControllerClient) (*Sensor, error) {
+func NewSensor(intervall int64, con ControllerClient, dbClient databaseClient) (*Sensor, error) {
 	if intervall < 0 {
 		return nil, fmt.Errorf("intervall must be positiv but was %d", intervall)
 	}
@@ -25,10 +24,10 @@ func NewSensor(intervall int64, con ControllerClient) (*Sensor, error) {
 		return nil, fmt.Errorf("controller was not set")
 	}
 	return &Sensor{
-		intervall:          intervall,
-		controller:         con,
-		presentError:       nil,
-		lastErrorTriggered: false,
+		intervall:    intervall,
+		controller:   con,
+		presentError: nil,
+		database:     dbClient,
 	}, nil
 }
 
@@ -54,13 +53,11 @@ func (s *Sensor) StartSensor() chan bool {
 }
 
 func (s *Sensor) SetError(ctx context.Context, req *ErrorRequest) (*Empty, error) {
-	if s.lastErrorTriggered {
-		s.presentError = req
-	} else {
-		// wait for the previous error to be triggerd at least once
-		<-s.notifyErrorTrigger
-		s.presentError = req
+	err := s.saveEvent(ctx, DatabaseRequest_ErrorRequest, req.GetTime(), false)
+	if err != nil {
+		zap.L().Error("could not save ErrorEvent", zap.Error(err))
 	}
+	s.presentError = req
 	return &Empty{}, nil
 }
 
@@ -68,11 +65,9 @@ func (s *Sensor) communicate(ctx context.Context) {
 	if s.isErrorPresent() {
 		switch s.presentError.Type {
 		case Error_missing_packet:
-			s.errorWasTriggered()
 			return
 		case Error_late:
 			time.Sleep(time.Duration(s.intervall*2) * time.Millisecond) // sleep double the typical sending interval
-			s.errorWasTriggered()
 			// here sending normally afterwards -> no return
 		case Error_empty:
 			// send empty package
@@ -80,7 +75,6 @@ func (s *Sensor) communicate(ctx context.Context) {
 			if err != nil {
 				zap.L().Error("Nil Update to controller failed", zap.Error(err))
 			}
-			s.errorWasTriggered()
 			return
 		case Error_flood:
 			// send everything continuously to all connected devices
@@ -94,7 +88,6 @@ func (s *Sensor) communicate(ctx context.Context) {
 					zap.L().Error("Nil Update to controller failed", zap.Error(err))
 				}
 			}
-			s.errorWasTriggered()
 		}
 	}
 	// normal sending from here on
@@ -109,16 +102,22 @@ func (s *Sensor) communicate(ctx context.Context) {
 }
 
 func (s *Sensor) isErrorPresent() bool {
-	if s.presentError != nil && (time.Now().Unix() < s.presentError.Time+int64(s.presentError.Milliseconds) || s.lastErrorTriggered == false) {
+	if s.presentError != nil && (time.Now().Unix() < s.presentError.Time+int64(s.presentError.Milliseconds)) {
 		return true
 	}
 	// reset error state
-	if s.presentError != nil && (time.Now().Unix() >= s.presentError.Time+int64(s.presentError.Milliseconds) && s.lastErrorTriggered == true) {
+	if s.presentError != nil && (time.Now().Unix() >= s.presentError.Time+int64(s.presentError.Milliseconds)) {
 		s.presentError = nil
 	}
 	return false
 }
 
-func (s *Sensor) errorWasTriggered() {
-	s.lastErrorTriggered = true
+func (s *Sensor) saveEvent(ctx context.Context, Etype DatabaseRequest_EventType, time int64, wasEmpty bool) error {
+	_, err := s.database.SaveEvent(ctx, &DatabaseRequest{
+		Time:     time,
+		Type:     Etype,
+		WasEmpty: wasEmpty,
+		Receiver: DatabaseRequest_actor,
+	})
+	return err
 }
