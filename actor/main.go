@@ -21,12 +21,12 @@ func main() {
 	// connection to database
 	dbconn, err := grpc.Dial(":9090", grpc.WithInsecure())
 	if err != nil {
-		zap.L().Fatal("could not dial to database", zap.Error(err))
+		logger.Fatal("could not dial to database", zap.Error(err))
 	}
 	defer dbconn.Close()
 	db := api.NewDatabaseClient(dbconn)
 
-	s, err := api.StartActor(db)
+	s, err := api.StartActor(db, logger)
 	if err != nil {
 		logger.Fatal("could not start ActorServer", zap.Error(err))
 	}
@@ -38,6 +38,6 @@ func main() {
 	logger.Info("actor started...")
 
 	if err := grpcServer.Serve(lis); err != nil {
-		zap.L().Fatal("failed to serve", zap.Error(err))
+		logger.Fatal("failed to serve", zap.Error(err))
 	}
 }

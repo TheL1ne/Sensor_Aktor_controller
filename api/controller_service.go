@@ -13,9 +13,10 @@ type Controller struct {
 	actor        ActorClient
 	database     DatabaseClient
 	presentError *ErrorRequest
+	logger       *zap.Logger
 }
 
-func StartController(actor ActorClient, dbClient DatabaseClient) (*Controller, error) {
+func StartController(actor ActorClient, dbClient DatabaseClient, log *zap.Logger) (*Controller, error) {
 	if actor == nil {
 		return nil, fmt.Errorf("Actor must be set")
 	}
@@ -24,6 +25,7 @@ func StartController(actor ActorClient, dbClient DatabaseClient) (*Controller, e
 		actor:        actor,
 		database:     dbClient,
 		presentError: nil,
+		logger:       log,
 	}
 
 	go func() {
@@ -37,7 +39,7 @@ func StartController(actor ActorClient, dbClient DatabaseClient) (*Controller, e
 						Position: 3.14159,
 					})
 					if err != nil {
-						zap.L().Error("could not Update Position", zap.Error(err))
+						c.logger.Error("could not Update Position", zap.Error(err))
 					} else {
 						wasEmpty := false
 						if resp.GetTime() == 0 {
@@ -45,7 +47,7 @@ func StartController(actor ActorClient, dbClient DatabaseClient) (*Controller, e
 						}
 						err := c.saveEvent(ctx, DatabaseRequest_UpdatePositionResponse, time.Now().Unix(), wasEmpty)
 						if err != nil {
-							zap.L().Error("could not save UpdatePositionResponse to DB", zap.Error(err))
+							c.logger.Error("could not save UpdatePositionResponse to DB", zap.Error(err))
 						}
 					}
 				}
@@ -62,7 +64,7 @@ func (c *Controller) UpdateMeasurement(ctx context.Context, mes *Measurement) (*
 	if mes == nil {
 		err := c.saveEvent(ctx, DatabaseRequest_measurement, time.Now().Unix(), true)
 		if err != nil {
-			zap.L().Error("could not save Measurementupdate", zap.Error(err))
+			c.logger.Error("could not save Measurementupdate", zap.Error(err))
 		}
 		return nil, fmt.Errorf("measurement update was empty")
 	}
@@ -73,7 +75,7 @@ func (c *Controller) UpdateMeasurement(ctx context.Context, mes *Measurement) (*
 	}
 	err := c.saveEvent(ctx, DatabaseRequest_measurement, time.Now().Unix(), wasEmpty)
 	if err != nil {
-		zap.L().Error("could not save Measurementupdate", zap.Error(err))
+		c.logger.Error("could not save Measurementupdate", zap.Error(err))
 	}
 	if len(c.values) == 0 {
 		c.values = []float64{mes.GetValue()}
@@ -98,7 +100,7 @@ func (c *Controller) UpdateMeasurement(ctx context.Context, mes *Measurement) (*
 			Position: 3.14159,
 		})
 		if err != nil {
-			zap.L().Error("could not Update actor position", zap.Error(err))
+			c.logger.Error("could not Update actor position", zap.Error(err))
 		}
 		wasEmpty = false
 		if resp.GetTime() == 0 {
@@ -125,7 +127,7 @@ func (c *Controller) GetHistory(ctx context.Context, req *GetHistoryRequest) (*G
 	// save Event
 	err := c.saveEvent(ctx, DatabaseRequest_historyRequest, time.Now().Unix(), false)
 	if err != nil {
-		zap.L().Error("could not save GetHistoryRequest", zap.Error(err))
+		c.logger.Error("could not save GetHistoryRequest", zap.Error(err))
 	}
 
 	// reduce history to last 1000 values

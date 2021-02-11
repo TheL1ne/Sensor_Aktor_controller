@@ -16,18 +16,21 @@ func main() {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+
 	// databases own address
 	lis, err := net.Listen("tcp", ":9090")
 	if err != nil {
-		zap.L().Fatal("failed to listen", zap.Error(err))
+		logger.Fatal("failed to listen", zap.Error(err))
 	}
 
-	db := api.StartDB()
+	db := api.StartDB(logger)
 
 	grpcServer := grpc.NewServer()
 	api.RegisterDatabaseServer(grpcServer, db)
 
 	if err := grpcServer.Serve(lis); err != nil {
-		zap.L().Fatal("failed to serve", zap.Error(err))
+		logger.Fatal("failed to serve", zap.Error(err))
 	}
 }

@@ -12,12 +12,14 @@ type Actor struct {
 	position     float64
 	presentError *ErrorRequest
 	database     DatabaseClient
+	logger       *zap.Logger
 }
 
-func StartActor(dbC DatabaseClient) (*Actor, error) {
+func StartActor(dbC DatabaseClient, log *zap.Logger) (*Actor, error) {
 	return &Actor{
 		position: -1, // to mark not initialized position
 		database: dbC,
+		logger:   log,
 	}, nil
 }
 
@@ -25,13 +27,13 @@ func (a *Actor) UpdatePosition(ctx context.Context, req *UpdatePositionRequest) 
 	if req == nil {
 		err := a.saveEvent(ctx, DatabaseRequest_UpdatePositionRequest, time.Now().Unix(), true)
 		if err != nil {
-			zap.L().Error("could not save Event to database", zap.Error(err), zap.Any("Request", req))
+			a.logger.Error("could not save Event to database", zap.Error(err), zap.Any("Request", req))
 		}
 		return nil, fmt.Errorf("Positionupdate was empty")
 	} else {
 		err := a.saveEvent(ctx, DatabaseRequest_UpdatePositionRequest, req.GetTime(), false)
 		if err != nil {
-			zap.L().Error("could not save Event to database", zap.Error(err), zap.Any("Request", req))
+			a.logger.Error("could not save Event to database", zap.Error(err), zap.Any("Request", req))
 		}
 	}
 
@@ -61,7 +63,7 @@ func (a *Actor) GetPosition(context context.Context, req *Empty) (*GetPositionRe
 	}
 	err := a.saveEvent(context, DatabaseRequest_Empty, time.Now().Unix(), wasEmpty)
 	if err != nil {
-		zap.L().Error("could not save Event to database", zap.Error(err), zap.Any("Request", req))
+		a.logger.Error("could not save Event to database", zap.Error(err), zap.Any("Request", req))
 	}
 
 	return &GetPositionResponse{
@@ -72,7 +74,7 @@ func (a *Actor) GetPosition(context context.Context, req *Empty) (*GetPositionRe
 func (a *Actor) SetError(ctx context.Context, req *ErrorRequest) (*Empty, error) {
 	err := a.saveEvent(ctx, DatabaseRequest_ErrorRequest, req.GetTime(), false)
 	if err != nil {
-		zap.L().Error("could not save Event to database", zap.Error(err), zap.Any("Request", req))
+		a.logger.Error("could not save Event to database", zap.Error(err), zap.Any("Request", req))
 	}
 	a.presentError = req
 	return &Empty{}, nil

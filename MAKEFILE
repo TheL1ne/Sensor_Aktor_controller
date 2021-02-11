@@ -1,5 +1,13 @@
-build actor:
-	Get-Content Dockerfile_actor | docker build -t actor -
+all: proto docker start
+
+docker:
+	docker build -t sak .
 
 proto:
 	(cd api && protoc --go_out=plugins=grpc:. api.proto)
+
+start: 
+	docker-compose up
+
+start_and_build: docker
+	docker-compose up

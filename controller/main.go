@@ -10,18 +10,20 @@ import (
 )
 
 func main() {
-	zap.L().Info("Starting Controller")
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+	logger.Info("Starting Controller")
 
 	// controllers own address
 	lis, err := net.Listen("tcp", ":9000")
 	if err != nil {
-		zap.L().Fatal("Starting TCP-Listener failed", zap.Error(err))
+		logger.Fatal("Starting TCP-Listener failed", zap.Error(err))
 	}
 
 	// connection to actor
 	conn, err := grpc.Dial(":8080", grpc.WithInsecure())
 	if err != nil {
-		zap.L().Fatal("could not dial to Actor", zap.Error(err))
+		logger.Fatal("could not dial to Actor", zap.Error(err))
 	}
 	defer conn.Close()
 	actor := api.NewActorClient(conn)
@@ -29,22 +31,22 @@ func main() {
 	// connection to database
 	dbconn, err := grpc.Dial(":9090", grpc.WithInsecure())
 	if err != nil {
-		zap.L().Fatal("could not dial to database", zap.Error(err))
+		logger.Fatal("could not dial to database", zap.Error(err))
 	}
 	defer dbconn.Close()
 	db := api.NewDatabaseClient(dbconn)
 
-	controller, err := api.StartController(actor, db)
+	controller, err := api.StartController(actor, db, logger)
 	if err != nil {
-		zap.L().Fatal("could not start ControllerServer", zap.Error(err))
+		logger.Fatal("could not start ControllerServer", zap.Error(err))
 	}
 
 	grpcServer := grpc.NewServer()
 
 	api.RegisterControllerServer(grpcServer, controller)
 
-	zap.L().Info("controller starts serving")
+	logger.Info("controller starts serving")
 	if err = grpcServer.Serve(lis); err != nil {
-		zap.L().Fatal("failed to serve", zap.Error(err))
+		logger.Fatal("failed to serve", zap.Error(err))
 	}
 }

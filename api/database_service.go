@@ -11,30 +11,32 @@ import (
 type Database struct {
 	db              *sql.DB
 	insertStatement *sql.Stmt
+	logger          *zap.Logger
 }
 
-func StartDB() *Database {
+func StartDB(log *zap.Logger) *Database {
 	database, err := sql.Open("sqlite3", "./events.db")
 	if err != nil {
-		zap.L().Error("could not open database", zap.Error(err))
+		log.Error("could not open database", zap.Error(err))
 	}
 
 	statement, err := database.Prepare("CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY, time INTEGER, type TEXT, wasEmpty BOOL)")
 	if err != nil {
-		zap.L().Error("could not prepare table creation", zap.Error(err))
+		log.Error("could not prepare table creation", zap.Error(err))
 	}
 	_, err = statement.Exec()
 	if err != nil {
-		zap.L().Error("could not execute table creation", zap.Error(err))
+		log.Error("could not execute table creation", zap.Error(err))
 	}
 
 	statement, err = database.Prepare("INSERT INTO events (time, type, wasEmpty) VALUES (?, ?, ?)")
 	if err != nil {
-		zap.L().Error("could not prepare insert statement", zap.Error(err))
+		log.Error("could not prepare insert statement", zap.Error(err))
 	}
 	return &Database{
 		db:              database,
 		insertStatement: statement,
+		logger:          log,
 	}
 }
 

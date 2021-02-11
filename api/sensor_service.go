@@ -14,9 +14,10 @@ type Sensor struct {
 	controller   ControllerClient
 	presentError *ErrorRequest
 	database     DatabaseClient
+	logger       *zap.Logger
 }
 
-func NewSensor(intervall int64, con ControllerClient, dbClient DatabaseClient) (*Sensor, error) {
+func NewSensor(intervall int64, con ControllerClient, dbClient DatabaseClient, logger *zap.Logger) (*Sensor, error) {
 	if intervall < 0 {
 		return nil, fmt.Errorf("intervall must be positiv but was %d", intervall)
 	}
@@ -28,6 +29,7 @@ func NewSensor(intervall int64, con ControllerClient, dbClient DatabaseClient) (
 		controller:   con,
 		presentError: nil,
 		database:     dbClient,
+		logger:       logger,
 	}, nil
 }
 
@@ -55,7 +57,7 @@ func (s *Sensor) StartSensor() chan bool {
 func (s *Sensor) SetError(ctx context.Context, req *ErrorRequest) (*Empty, error) {
 	err := s.saveEvent(ctx, DatabaseRequest_ErrorRequest, req.GetTime(), false)
 	if err != nil {
-		zap.L().Error("could not save ErrorEvent", zap.Error(err))
+		s.logger.Error("could not save ErrorEvent", zap.Error(err))
 	}
 	s.presentError = req
 	return &Empty{}, nil
@@ -73,7 +75,7 @@ func (s *Sensor) communicate(ctx context.Context) {
 			// send empty package
 			_, err := s.controller.UpdateMeasurement(ctx, nil)
 			if err != nil {
-				zap.L().Error("Nil Update to controller failed", zap.Error(err))
+				s.logger.Error("Nil Update to controller failed", zap.Error(err))
 			}
 			s.saveEvent(ctx, DatabaseRequest_Empty, time.Now().Unix(), false)
 			return
@@ -86,7 +88,7 @@ func (s *Sensor) communicate(ctx context.Context) {
 					Unit:  Unit_degree_celsius,
 				})
 				if err != nil {
-					zap.L().Error("flooding event to controller failed", zap.Error(err))
+					s.logger.Error("flooding event to controller failed", zap.Error(err))
 				}
 				s.saveEvent(ctx, DatabaseRequest_Empty, time.Now().Unix(), false)
 			}
@@ -99,7 +101,7 @@ func (s *Sensor) communicate(ctx context.Context) {
 		Unit:  Unit_degree_celsius,
 	})
 	if err != nil {
-		zap.L().Error("Update to controller failed", zap.Error(err))
+		s.logger.Error("Update to controller failed", zap.Error(err))
 	}
 	s.saveEvent(ctx, DatabaseRequest_Empty, time.Now().Unix(), false)
 }

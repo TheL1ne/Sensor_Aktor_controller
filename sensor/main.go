@@ -22,10 +22,13 @@ func main() {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+
 	// dial controller
 	conn, err := grpc.Dial(":9000", grpc.WithInsecure())
 	if err != nil {
-		zap.L().Fatal("could not dial to Actor", zap.Error(err))
+		logger.Fatal("could not dial to Actor", zap.Error(err))
 	}
 	defer conn.Close()
 	controller := api.NewControllerClient(conn)
@@ -33,16 +36,16 @@ func main() {
 	// connection to database
 	dbconn, err := grpc.Dial(":9090", grpc.WithInsecure())
 	if err != nil {
-		zap.L().Fatal("could not dial to database", zap.Error(err))
+		logger.Fatal("could not dial to database", zap.Error(err))
 	}
 	defer dbconn.Close()
 	db := api.NewDatabaseClient(dbconn)
 
-	sensor, err := api.NewSensor(intervall, controller, db)
+	sensor, err := api.NewSensor(intervall, controller, db, logger)
 	done := sensor.StartSensor()
 	defer close(done)
-	zap.L().Info("started sensor, waiting for Signal...")
+	logger.Info("started sensor, waiting for Signal...")
 	// waiting for killing
 	<-sigs
-	zap.L().Info("exiting")
+	logger.Info("exiting")
 }
