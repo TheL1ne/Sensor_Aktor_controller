@@ -24,10 +24,17 @@ func main() {
 		zap.L().Fatal("could not dial to Actor", zap.Error(err))
 	}
 	defer conn.Close()
-
 	actor := api.NewActorClient(conn)
 
-	controller, err := api.StartController(actor)
+	// connection to database
+	dbconn, err := grpc.Dial(":9090", grpc.WithInsecure())
+	if err != nil {
+		zap.L().Fatal("could not dial to database", zap.Error(err))
+	}
+	defer dbconn.Close()
+	db := api.NewDatabaseClient(dbconn)
+
+	controller, err := api.StartController(actor, db)
 	if err != nil {
 		zap.L().Fatal("could not start ControllerServer", zap.Error(err))
 	}

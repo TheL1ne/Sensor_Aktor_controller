@@ -16,8 +16,15 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	// TODO: change probablity of failure here
-	s, err := api.StartActor()
+	// connection to database
+	dbconn, err := grpc.Dial(":9090", grpc.WithInsecure())
+	if err != nil {
+		zap.L().Fatal("could not dial to database", zap.Error(err))
+	}
+	defer dbconn.Close()
+	db := api.NewDatabaseClient(dbconn)
+
+	s, err := api.StartActor(db)
 	if err != nil {
 		zap.L().Fatal("could not start ActorServer", zap.Error(err))
 	}

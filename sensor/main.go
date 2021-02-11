@@ -12,7 +12,7 @@ import (
 
 var (
 	// intervall of reports in Milliseconds
-	intervall = int64(300)
+	intervall = int64(500)
 	// in percent
 	failProbability = 0
 )
@@ -28,10 +28,17 @@ func main() {
 		zap.L().Fatal("could not dial to Actor", zap.Error(err))
 	}
 	defer conn.Close()
-
 	controller := api.NewControllerClient(conn)
 
-	sensor, err := api.NewSensor(intervall, controller)
+	// connection to database
+	dbconn, err := grpc.Dial(":9090", grpc.WithInsecure())
+	if err != nil {
+		zap.L().Fatal("could not dial to database", zap.Error(err))
+	}
+	defer dbconn.Close()
+	db := api.NewDatabaseClient(dbconn)
+
+	sensor, err := api.NewSensor(intervall, controller, db)
 	done := sensor.StartSensor()
 	defer close(done)
 	zap.L().Info("started sensor, waiting for Signal...")
