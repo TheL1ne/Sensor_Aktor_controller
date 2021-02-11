@@ -3,6 +3,7 @@ module github.com/TheL1ne/Sensor_Aktor_controller
 go 1.15
 
 require (
+	github.com/mattn/go-sqlite3 v1.14.6 // indirect
 	go.uber.org/zap v1.16.0
 	google.golang.org/api v0.35.0
 	google.golang.org/genproto v0.0.0-20201110150050-8816d57aaa9a
