@@ -11,10 +11,10 @@ import (
 type Actor struct {
 	position     float64
 	presentError *ErrorRequest
-	database     databaseClient
+	database     DatabaseClient
 }
 
-func StartActor(dbC databaseClient) (*Actor, error) {
+func StartActor(dbC DatabaseClient) (*Actor, error) {
 	return &Actor{
 		position: -1, // to mark not initialized position
 		database: dbC,

@@ -13,10 +13,10 @@ type Sensor struct {
 	intervall    int64
 	controller   ControllerClient
 	presentError *ErrorRequest
-	database     databaseClient
+	database     DatabaseClient
 }
 
-func NewSensor(intervall int64, con ControllerClient, dbClient databaseClient) (*Sensor, error) {
+func NewSensor(intervall int64, con ControllerClient, dbClient DatabaseClient) (*Sensor, error) {
 	if intervall < 0 {
 		return nil, fmt.Errorf("intervall must be positiv but was %d", intervall)
 	}

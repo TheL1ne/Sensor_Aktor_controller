@@ -11,11 +11,11 @@ import (
 type Controller struct {
 	values       []float64
 	actor        ActorClient
-	database     databaseClient
+	database     DatabaseClient
 	presentError *ErrorRequest
 }
 
-func StartController(actor ActorClient, dbClient databaseClient) (*Controller, error) {
+func StartController(actor ActorClient, dbClient DatabaseClient) (*Controller, error) {
 	if actor == nil {
 		return nil, fmt.Errorf("Actor must be set")
 	}
