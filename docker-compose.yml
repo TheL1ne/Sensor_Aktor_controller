@@ -1,0 +1,36 @@
+services:
+  actor:
+    build: .
+    ports:
+      - "8080:8080"
+    links:
+      - database
+    command: go run actor/main.go
+    depends_on:
+      - database
+  sensor:
+    image: "sak:latest"
+    links:
+      - database
+      - controller
+    command: go run sensor/main.go
+    depends_on:
+      - database
+      - controller
+  controller:
+    image: "sak:latest"
+    links:
+      - database
+    ports:
+      - "9000:9000"
+    command: go run controller/main.go
+    depends_on:
+      - actor
+      - database
+  database:
+    image: "sak:latest"
+    command: go run database/main.go
+    ports:
+      - "9090:9090"
+    volumes:
+      - .:/database
