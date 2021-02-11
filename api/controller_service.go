@@ -58,10 +58,18 @@ func StartController(actor ActorClient, dbClient databaseClient) (*Controller, e
 }
 
 func (c *Controller) UpdateMeasurement(ctx context.Context, mes *Measurement) (*Empty, error) {
+	// early return because of empty update
+	if mes == nil {
+		err := c.saveEvent(ctx, DatabaseRequest_measurement, time.Now().Unix(), true)
+		if err != nil {
+			zap.L().Error("could not save Measurementupdate", zap.Error(err))
+		}
+		return nil, fmt.Errorf("measurement update was empty")
+	}
 	// save Event
 	wasEmpty := false
 	if mes.GetTime() == 0 {
-		wasEmpty = true
+		wasEmpty = true // struct is present but not initialized
 	}
 	err := c.saveEvent(ctx, DatabaseRequest_measurement, time.Now().Unix(), wasEmpty)
 	if err != nil {

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.uber.org/zap"
@@ -26,6 +27,7 @@ func (a *Actor) UpdatePosition(ctx context.Context, req *UpdatePositionRequest) 
 		if err != nil {
 			zap.L().Error("could not save Event to database", zap.Error(err), zap.Any("Request", req))
 		}
+		return nil, fmt.Errorf("Positionupdate was empty")
 	} else {
 		err := a.saveEvent(ctx, DatabaseRequest_UpdatePositionRequest, req.GetTime(), false)
 		if err != nil {

@@ -75,6 +75,7 @@ func (s *Sensor) communicate(ctx context.Context) {
 			if err != nil {
 				zap.L().Error("Nil Update to controller failed", zap.Error(err))
 			}
+			s.saveEvent(ctx, DatabaseRequest_Empty, time.Now().Unix(), false)
 			return
 		case Error_flood:
 			// send everything continuously to all connected devices
@@ -85,8 +86,9 @@ func (s *Sensor) communicate(ctx context.Context) {
 					Unit:  Unit_degree_celsius,
 				})
 				if err != nil {
-					zap.L().Error("Nil Update to controller failed", zap.Error(err))
+					zap.L().Error("flooding event to controller failed", zap.Error(err))
 				}
+				s.saveEvent(ctx, DatabaseRequest_Empty, time.Now().Unix(), false)
 			}
 		}
 	}
@@ -99,6 +101,7 @@ func (s *Sensor) communicate(ctx context.Context) {
 	if err != nil {
 		zap.L().Error("Update to controller failed", zap.Error(err))
 	}
+	s.saveEvent(ctx, DatabaseRequest_Empty, time.Now().Unix(), false)
 }
 
 func (s *Sensor) isErrorPresent() bool {
