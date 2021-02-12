@@ -19,16 +19,20 @@ func main() {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 
+	logger.Info("starting DB")
+
 	// databases own address
 	lis, err := net.Listen("tcp", ":9090")
 	if err != nil {
 		logger.Fatal("failed to listen", zap.Error(err))
 	}
 
-	db := api.StartDB(logger)
+	db := api.NewDB(logger)
 
 	grpcServer := grpc.NewServer()
 	api.RegisterDatabaseServer(grpcServer, db)
+
+	logger.Info("DB is serving...")
 
 	if err := grpcServer.Serve(lis); err != nil {
 		logger.Fatal("failed to serve", zap.Error(err))

@@ -14,7 +14,7 @@ type Database struct {
 	logger          *zap.Logger
 }
 
-func StartDB(log *zap.Logger) *Database {
+func NewDB(log *zap.Logger) *Database {
 	database, err := sql.Open("sqlite3", "./events.db")
 	if err != nil {
 		log.Error("could not open database", zap.Error(err))
@@ -33,6 +33,7 @@ func StartDB(log *zap.Logger) *Database {
 	if err != nil {
 		log.Error("could not prepare insert statement", zap.Error(err))
 	}
+	log.Info("DB started")
 	return &Database{
 		db:              database,
 		insertStatement: statement,
@@ -41,6 +42,7 @@ func StartDB(log *zap.Logger) *Database {
 }
 
 func (db *Database) SaveEvent(ctx context.Context, dbReq *DatabaseRequest) (*Empty, error) {
+	db.logger.Info("event Received", zap.Any("Request", dbReq.String()))
 	_, err := db.insertStatement.Exec(dbReq.GetTime(), DatabaseRequest_EventType_name[int32(dbReq.Type)], dbReq.GetWasEmpty())
 	if err != nil {
 		return nil, err

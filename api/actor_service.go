@@ -15,7 +15,7 @@ type Actor struct {
 	logger       *zap.Logger
 }
 
-func StartActor(dbC DatabaseClient, log *zap.Logger) (*Actor, error) {
+func NewActor(dbC DatabaseClient, log *zap.Logger) (*Actor, error) {
 	return &Actor{
 		position: -1, // to mark not initialized position
 		database: dbC,
@@ -24,6 +24,7 @@ func StartActor(dbC DatabaseClient, log *zap.Logger) (*Actor, error) {
 }
 
 func (a *Actor) UpdatePosition(ctx context.Context, req *UpdatePositionRequest) (*UpdatePositionResponse, error) {
+	a.logger.Info("Updatepositionrequest received")
 	if req == nil {
 		err := a.saveEvent(ctx, DatabaseRequest_UpdatePositionRequest, time.Now().Unix(), true)
 		if err != nil {
@@ -51,16 +52,19 @@ func (a *Actor) UpdatePosition(ctx context.Context, req *UpdatePositionRequest) 
 		}
 	}
 	a.position = req.GetPosition()
+	a.logger.Info("sending PositionResponse...")
 	return &UpdatePositionResponse{
 		ReachedPosition: req.GetPosition(),
 	}, nil
 }
 
 func (a *Actor) GetPosition(context context.Context, req *Empty) (*GetPositionResponse, error) {
+	a.logger.Info("GetPositionRequest received")
 	wasEmpty := false
 	if req == nil {
 		wasEmpty = true
 	}
+
 	err := a.saveEvent(context, DatabaseRequest_Empty, time.Now().Unix(), wasEmpty)
 	if err != nil {
 		a.logger.Error("could not save Event to database", zap.Error(err), zap.Any("Request", req))
@@ -72,6 +76,7 @@ func (a *Actor) GetPosition(context context.Context, req *Empty) (*GetPositionRe
 }
 
 func (a *Actor) SetError(ctx context.Context, req *ErrorRequest) (*Empty, error) {
+	a.logger.Info("Errorrequest received")
 	err := a.saveEvent(ctx, DatabaseRequest_ErrorRequest, req.GetTime(), false)
 	if err != nil {
 		a.logger.Error("could not save Event to database", zap.Error(err), zap.Any("Request", req))

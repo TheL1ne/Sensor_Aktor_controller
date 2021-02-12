@@ -34,6 +34,7 @@ func NewSensor(intervall int64, con ControllerClient, dbClient DatabaseClient, l
 }
 
 func (s *Sensor) StartSensor() chan bool {
+	s.logger.Info("Sensor Started")
 	done := make(chan bool)
 	ticker := time.NewTicker(time.Duration(s.intervall) * time.Millisecond)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -55,6 +56,7 @@ func (s *Sensor) StartSensor() chan bool {
 }
 
 func (s *Sensor) SetError(ctx context.Context, req *ErrorRequest) (*Empty, error) {
+	s.logger.Info("SetError received")
 	err := s.saveEvent(ctx, DatabaseRequest_ErrorRequest, req.GetTime(), false)
 	if err != nil {
 		s.logger.Error("could not save ErrorEvent", zap.Error(err))
@@ -65,6 +67,7 @@ func (s *Sensor) SetError(ctx context.Context, req *ErrorRequest) (*Empty, error
 
 func (s *Sensor) communicate(ctx context.Context) {
 	if s.isErrorPresent() {
+		s.logger.Info("errorous comminucation", zap.String("Error", s.presentError.String()))
 		switch s.presentError.Type {
 		case Error_missing_packet:
 			return
@@ -122,7 +125,7 @@ func (s *Sensor) saveEvent(ctx context.Context, Etype DatabaseRequest_EventType,
 		Time:     time,
 		Type:     Etype,
 		WasEmpty: wasEmpty,
-		Receiver: DatabaseRequest_actor,
+		Receiver: DatabaseRequest_sensor,
 	})
 	return err
 }

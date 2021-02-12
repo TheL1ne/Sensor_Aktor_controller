@@ -14,9 +14,10 @@ type Controller struct {
 	database     DatabaseClient
 	presentError *ErrorRequest
 	logger       *zap.Logger
+	counter      int
 }
 
-func StartController(actor ActorClient, dbClient DatabaseClient, log *zap.Logger) (*Controller, error) {
+func NewController(actor ActorClient, dbClient DatabaseClient, log *zap.Logger) (*Controller, error) {
 	if actor == nil {
 		return nil, fmt.Errorf("Actor must be set")
 	}
@@ -26,6 +27,7 @@ func StartController(actor ActorClient, dbClient DatabaseClient, log *zap.Logger
 		database:     dbClient,
 		presentError: nil,
 		logger:       log,
+		counter:      0,
 	}
 
 	go func() {
@@ -34,6 +36,7 @@ func StartController(actor ActorClient, dbClient DatabaseClient, log *zap.Logger
 		// running for flooding occurences
 		for {
 			if c.presentError != nil && c.presentError.Type == Error_flood {
+				c.logger.Info("start flooding")
 				for c.isErrorPresent() {
 					resp, err := c.actor.UpdatePosition(ctx, &UpdatePositionRequest{
 						Position: 3.14159,
@@ -60,6 +63,7 @@ func StartController(actor ActorClient, dbClient DatabaseClient, log *zap.Logger
 }
 
 func (c *Controller) UpdateMeasurement(ctx context.Context, mes *Measurement) (*Empty, error) {
+	c.logger.Info("UpdateMeasurement received")
 	// early return because of empty update
 	if mes == nil {
 		err := c.saveEvent(ctx, DatabaseRequest_measurement, time.Now().Unix(), true)
@@ -83,9 +87,7 @@ func (c *Controller) UpdateMeasurement(ctx context.Context, mes *Measurement) (*
 		c.values = append(c.values, mes.GetValue())
 	}
 	// counter how many measurements lead to actor update
-	i := 0
-	if i%10 == 0 {
-		i = 0
+	if c.counter%10 == 0 {
 		if c.isErrorPresent() {
 			switch c.presentError.Type {
 			case Error_missing_packet:
@@ -107,9 +109,8 @@ func (c *Controller) UpdateMeasurement(ctx context.Context, mes *Measurement) (*
 			wasEmpty = true
 		}
 		c.saveEvent(ctx, DatabaseRequest_UpdatePositionResponse, time.Now().Unix(), false)
-	} else {
-		i++
 	}
+	c.counter++
 	if c.isErrorPresent() {
 		switch c.presentError.Type {
 		case Error_missing_packet:
@@ -124,6 +125,7 @@ func (c *Controller) UpdateMeasurement(ctx context.Context, mes *Measurement) (*
 }
 
 func (c *Controller) GetHistory(ctx context.Context, req *GetHistoryRequest) (*GetHistoryResponse, error) {
+	c.logger.Info("GetHistory received")
 	// save Event
 	err := c.saveEvent(ctx, DatabaseRequest_historyRequest, time.Now().Unix(), false)
 	if err != nil {
@@ -152,6 +154,7 @@ func (c *Controller) GetHistory(ctx context.Context, req *GetHistoryRequest) (*G
 }
 
 func (c *Controller) SetError(ctx context.Context, req *ErrorRequest) (*Empty, error) {
+	c.logger.Info("SetError received")
 	c.presentError = req
 	return &Empty{}, nil
 }
@@ -172,7 +175,7 @@ func (c *Controller) saveEvent(ctx context.Context, Etype DatabaseRequest_EventT
 		Time:     time,
 		Type:     Etype,
 		WasEmpty: wasEmpty,
-		Receiver: DatabaseRequest_actor,
+		Receiver: DatabaseRequest_controller,
 	})
 	return err
 }

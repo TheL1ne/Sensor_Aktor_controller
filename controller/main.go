@@ -21,7 +21,7 @@ func main() {
 	}
 
 	// connection to actor
-	conn, err := grpc.Dial(":8080", grpc.WithInsecure())
+	conn, err := grpc.Dial("actor:8080", grpc.WithInsecure())
 	if err != nil {
 		logger.Fatal("could not dial to Actor", zap.Error(err))
 	}
@@ -29,14 +29,14 @@ func main() {
 	actor := api.NewActorClient(conn)
 
 	// connection to database
-	dbconn, err := grpc.Dial(":9090", grpc.WithInsecure())
+	dbconn, err := grpc.Dial("database:9090", grpc.WithInsecure())
 	if err != nil {
 		logger.Fatal("could not dial to database", zap.Error(err))
 	}
 	defer dbconn.Close()
 	db := api.NewDatabaseClient(dbconn)
 
-	controller, err := api.StartController(actor, db, logger)
+	controller, err := api.NewController(actor, db, logger)
 	if err != nil {
 		logger.Fatal("could not start ControllerServer", zap.Error(err))
 	}
