@@ -85,7 +85,7 @@ service Controller {
 
     rpc SetError (ErrorRequest) returns (Empty) {
         option (google.api.http) = {
-            post: "/nexterror"
+            post: "/seterror"
         };
     }
 }
@@ -121,7 +121,7 @@ service Actor {
 
     rpc SetError (ErrorRequest) returns (Empty) {
         option (google.api.http) = {
-            post: "/nexterror"
+            post: "/seterror"
         };
     }
 }
@@ -129,7 +129,7 @@ service Actor {
 service Sensor {
     rpc SetError (ErrorRequest) returns (Empty) {
         option (google.api.http) = {
-            post: "/nexterror"
+            post: "/seterror"
         };
     }
 }
