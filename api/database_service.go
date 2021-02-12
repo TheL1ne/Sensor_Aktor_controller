@@ -42,7 +42,7 @@ func NewDB(log *zap.Logger) *Database {
 }
 
 func (db *Database) SaveEvent(ctx context.Context, dbReq *DatabaseRequest) (*Empty, error) {
-	db.logger.Info("event Received", zap.Any("Request", dbReq.String()))
+	db.logger.Info("event Received", zap.String("Type", dbReq.Type.String()), zap.String("receiver", dbReq.Receiver.String()))
 	_, err := db.insertStatement.Exec(dbReq.GetTime(), DatabaseRequest_EventType_name[int32(dbReq.Type)], dbReq.GetWasEmpty())
 	if err != nil {
 		return nil, err

@@ -7,6 +7,7 @@ I added the capability of a local sqllite3 database to record my traffic as it i
 * everything in `go.mod`
 
 ## Starting the mockup
+Just do `make all` for the first startup. Afterwards you can go with `make start`
 
 ## generation from proto
 I use protobuffers to define my small services and take advantage of the easily included GRPC functionality. To regenerate them you need to:
