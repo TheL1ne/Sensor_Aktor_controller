@@ -6,13 +6,14 @@
      xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
      xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
      ontologyIRI="http://www.semanticweb.org/thel!ne/ontologies/2021/1/thesis_ontology">
+    <Prefix name="" IRI="http://www.semanticweb.org/thel!ne/ontologies/2021/1/thesis_ontology"/>
     <Prefix name="owl" IRI="http://www.w3.org/2002/07/owl#"/>
     <Prefix name="rdf" IRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
     <Prefix name="xml" IRI="http://www.w3.org/XML/1998/namespace"/>
     <Prefix name="xsd" IRI="http://www.w3.org/2001/XMLSchema#"/>
     <Prefix name="rdfs" IRI="http://www.w3.org/2000/01/rdf-schema#"/>
     <Declaration>
-        <Class IRI="#NetworkService"/>
+        <Class IRI="#ProductionMachine"/>
     </Declaration>
     <Declaration>
         <Class IRI="#Typ_A_(Sensor)"/>
@@ -51,118 +52,128 @@
         <ObjectProperty IRI="#sendsTo"/>
     </Declaration>
     <EquivalentClasses>
-        <Class IRI="#Typ_A_(Sensor)"/>
-        <ObjectIntersectionOf>
-            <Class IRI="#NetworkService"/>
-            <ObjectSomeValuesFrom>
-                <ObjectProperty IRI="#sendsReportTo"/>
-                <Class IRI="#Typ_D_(Database)"/>
-            </ObjectSomeValuesFrom>
-            <ObjectAllValuesFrom>
-                <ObjectProperty IRI="#sendsSensorDataTo"/>
-                <Class IRI="#Typ_C_(Controller)"/>
-            </ObjectAllValuesFrom>
-        </ObjectIntersectionOf>
+        <Class IRI="#ProductionMachine"/>
+        <ObjectUnionOf>
+            <Class IRI="#Typ_A_(Sensor)"/>
+            <Class IRI="#Typ_B_(Actor)"/>
+            <Class IRI="#Typ_C_(Controller)"/>
+        </ObjectUnionOf>
     </EquivalentClasses>
-    <EquivalentClasses>
+    <SubClassOf>
+        <Class IRI="#Typ_A_(Sensor)"/>
+        <Class IRI="#ProductionMachine"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Typ_A_(Sensor)"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#sendsSensorDataTo"/>
+            <Class IRI="#Typ_C_(Controller)"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
         <Class IRI="#Typ_B_(Actor)"/>
-        <ObjectIntersectionOf>
-            <Class IRI="#NetworkService"/>
-            <ObjectSomeValuesFrom>
-                <ObjectProperty IRI="#receivesPositionRequestFrom"/>
-                <Class IRI="#Typ_C_(Controller)"/>
-            </ObjectSomeValuesFrom>
-            <ObjectSomeValuesFrom>
-                <ObjectProperty IRI="#sendsReportTo"/>
-                <Class IRI="#Typ_D_(Database)"/>
-            </ObjectSomeValuesFrom>
-        </ObjectIntersectionOf>
-    </EquivalentClasses>
-    <EquivalentClasses>
+        <Class IRI="#ProductionMachine"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Typ_B_(Actor)"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#receivesPositionRequestFrom"/>
+            <Class IRI="#Typ_C_(Controller)"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
         <Class IRI="#Typ_C_(Controller)"/>
-        <ObjectIntersectionOf>
-            <Class IRI="#NetworkService"/>
-            <ObjectSomeValuesFrom>
-                <ObjectProperty IRI="#receivesSensorDataFrom"/>
-                <Class IRI="#Typ_A_(Sensor)"/>
-            </ObjectSomeValuesFrom>
-            <ObjectSomeValuesFrom>
-                <ObjectProperty IRI="#sendsPositionRequestTo"/>
-                <Class IRI="#Typ_B_(Actor)"/>
-            </ObjectSomeValuesFrom>
-            <ObjectSomeValuesFrom>
-                <ObjectProperty IRI="#sendsReportTo"/>
-                <Class IRI="#Typ_D_(Database)"/>
-            </ObjectSomeValuesFrom>
-        </ObjectIntersectionOf>
-    </EquivalentClasses>
-    <EquivalentClasses>
+        <Class IRI="#ProductionMachine"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Typ_C_(Controller)"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#receivesSensorDataFrom"/>
+            <Class IRI="#Typ_A_(Sensor)"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#Typ_C_(Controller)"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#sendsPositionRequestTo"/>
+            <Class IRI="#Typ_B_(Actor)"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <SubClassOf>
         <Class IRI="#Typ_D_(Database)"/>
-        <ObjectIntersectionOf>
-            <Class IRI="#NetworkService"/>
-            <ObjectSomeValuesFrom>
-                <ObjectProperty IRI="#receivesReportsFrom"/>
-                <Class IRI="#NetworkService"/>
-            </ObjectSomeValuesFrom>
-        </ObjectIntersectionOf>
-    </EquivalentClasses>
-    <SubObjectPropertyOf>
-        <ObjectProperty IRI="#receivesPositionRequestFrom"/>
-        <ObjectProperty IRI="#receivesFrom"/>
-    </SubObjectPropertyOf>
-    <SubObjectPropertyOf>
-        <ObjectProperty IRI="#receivesReportsFrom"/>
-        <ObjectProperty IRI="#receivesFrom"/>
-    </SubObjectPropertyOf>
-    <SubObjectPropertyOf>
-        <ObjectProperty IRI="#receivesSensorDataFrom"/>
-        <ObjectProperty IRI="#receivesFrom"/>
-    </SubObjectPropertyOf>
-    <SubObjectPropertyOf>
-        <ObjectProperty IRI="#sendsPositionRequestTo"/>
-        <ObjectProperty IRI="#sendsTo"/>
-    </SubObjectPropertyOf>
-    <SubObjectPropertyOf>
-        <ObjectProperty IRI="#sendsReportTo"/>
-        <ObjectProperty IRI="#sendsTo"/>
-    </SubObjectPropertyOf>
-    <SubObjectPropertyOf>
-        <ObjectProperty IRI="#sendsSensorDataTo"/>
-        <ObjectProperty IRI="#sendsTo"/>
-    </SubObjectPropertyOf>
-    <InverseObjectProperties>
-        <ObjectProperty IRI="#receivesFrom"/>
-        <ObjectProperty IRI="#sendsTo"/>
-    </InverseObjectProperties>
-    <InverseObjectProperties>
-        <ObjectProperty IRI="#receivesPositionRequestFrom"/>
-        <ObjectProperty IRI="#sendsPositionRequestTo"/>
-    </InverseObjectProperties>
-    <InverseObjectProperties>
-        <ObjectProperty IRI="#receivesReportsFrom"/>
-        <ObjectProperty IRI="#sendsReportTo"/>
-    </InverseObjectProperties>
-    <InverseObjectProperties>
-        <ObjectProperty IRI="#receivesSensorDataFrom"/>
-        <ObjectProperty IRI="#sendsSensorDataTo"/>
-    </InverseObjectProperties>
-    <FunctionalObjectProperty>
-        <ObjectProperty IRI="#receivesPositionRequestFrom"/>
-    </FunctionalObjectProperty>
-    <FunctionalObjectProperty>
-        <ObjectProperty IRI="#sendsSensorDataTo"/>
-    </FunctionalObjectProperty>
-    <ObjectPropertyDomain>
-        <ObjectProperty IRI="#sendsSensorDataTo"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#receivesReportsFrom"/>
+            <Class IRI="#ProductionMachine"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+    <DisjointClasses>
+        <Class IRI="#ProductionMachine"/>
+        <Class IRI="#Typ_D_(Database)"/>
+    </DisjointClasses>
+    <DisjointClasses>
         <Class IRI="#Typ_A_(Sensor)"/>
-    </ObjectPropertyDomain>
+        <Class IRI="#Typ_B_(Actor)"/>
+        <Class IRI="#Typ_C_(Controller)"/>
+    </DisjointClasses>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#receivesPositionRequestFrom"/>
+        <ObjectProperty IRI="#receivesFrom"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#receivesReportsFrom"/>
+        <ObjectProperty IRI="#receivesFrom"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#receivesSensorDataFrom"/>
+        <ObjectProperty IRI="#receivesFrom"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#sendsPositionRequestTo"/>
+        <ObjectProperty IRI="#sendsTo"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#sendsReportTo"/>
+        <ObjectProperty IRI="#sendsTo"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#sendsSensorDataTo"/>
+        <ObjectProperty IRI="#sendsTo"/>
+    </SubObjectPropertyOf>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#receivesFrom"/>
+        <ObjectProperty IRI="#sendsTo"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#receivesPositionRequestFrom"/>
+        <ObjectProperty IRI="#sendsPositionRequestTo"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#receivesReportsFrom"/>
+        <ObjectProperty IRI="#sendsReportTo"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#receivesSensorDataFrom"/>
+        <ObjectProperty IRI="#sendsSensorDataTo"/>
+    </InverseObjectProperties>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#receivesPositionRequestFrom"/>
+        <Class IRI="#Typ_C_(Controller)"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#receivesReportsFrom"/>
+        <Class IRI="#ProductionMachine"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#receivesSensorDataFrom"/>
+        <Class IRI="#Typ_A_(Sensor)"/>
+    </ObjectPropertyRange>
     <ObjectPropertyRange>
         <ObjectProperty IRI="#sendsPositionRequestTo"/>
         <Class IRI="#Typ_B_(Actor)"/>
     </ObjectPropertyRange>
     <ObjectPropertyRange>
-        <ObjectProperty IRI="#sendsReportTo"/>
-        <Class IRI="#Typ_D_(Database)"/>
+        <ObjectProperty IRI="#sendsSensorDataTo"/>
+        <Class IRI="#Typ_C_(Controller)"/>
     </ObjectPropertyRange>
 </Ontology>
 
