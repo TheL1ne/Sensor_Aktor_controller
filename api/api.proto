@@ -105,6 +105,15 @@ message GetPositionResponse {
     double position = 2;
 }
 
+// placeholder for any service which has a SetErrorMethod
+service ManipulatableService{
+    rpc SetError (ErrorRequest) returns (Empty) {
+        option (google.api.http) = {
+            post: "/seterror"
+        };
+    }
+}
+
 service Actor {
     rpc UpdatePosition(UpdatePositionRequest) returns (UpdatePositionResponse) {
         option (google.api.http) = {
