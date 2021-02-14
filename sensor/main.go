@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
@@ -15,6 +16,7 @@ var (
 	intervall = int64(500)
 	// in percent
 	failProbability = 0
+	port            = ":8081"
 )
 
 func main() {
@@ -24,6 +26,13 @@ func main() {
 
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
+
+	// sensors address
+	lis, err := net.Listen("tcp", port)
+	if err != nil {
+		logger.Fatal("failed to listen", zap.Error(err))
+	}
+	logger.Info("starting sensor serving on", zap.String("Port", port))
 
 	// dial controller
 	conn, err := grpc.Dial("controller:9000", grpc.WithInsecure())
@@ -44,8 +53,13 @@ func main() {
 	sensor, err := api.NewSensor(intervall, controller, db, logger)
 	done := sensor.StartSensor()
 	defer close(done)
+
+	grpcServer := grpc.NewServer()
+	api.RegisterSensorServer(grpcServer, sensor)
+
 	logger.Info("started sensor, waiting for Signal...")
-	// waiting for killing
-	<-sigs
-	logger.Info("exiting")
+	// serving
+	if err := grpcServer.Serve(lis); err != nil {
+		logger.Fatal("failed to serve", zap.Error(err))
+	}
 }

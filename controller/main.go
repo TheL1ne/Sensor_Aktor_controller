@@ -9,13 +9,17 @@ import (
 	"google.golang.org/grpc"
 )
 
+var (
+	port = ":9000"
+)
+
 func main() {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 	logger.Info("Starting Controller")
 
 	// controllers own address
-	lis, err := net.Listen("tcp", ":9000")
+	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		logger.Fatal("Starting TCP-Listener failed", zap.Error(err))
 	}
@@ -45,7 +49,7 @@ func main() {
 
 	api.RegisterControllerServer(grpcServer, controller)
 
-	logger.Info("controller starts serving")
+	logger.Info("controller starts serving on", zap.String("Port", port))
 	if err = grpcServer.Serve(lis); err != nil {
 		logger.Fatal("failed to serve", zap.Error(err))
 	}

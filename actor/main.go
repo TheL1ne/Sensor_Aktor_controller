@@ -8,15 +8,19 @@ import (
 	"google.golang.org/grpc"
 )
 
+var (
+	port = ":8080"
+)
+
 func main() {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 	// actors address
-	lis, err := net.Listen("tcp", ":8080")
+	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		logger.Fatal("failed to listen", zap.Error(err))
 	}
-	logger.Info("starting actor serving on :8080")
+	logger.Info("starting actor serving on", zap.String("Port", port))
 
 	// connection to database
 	dbconn, err := grpc.Dial("database:9090", grpc.WithInsecure())

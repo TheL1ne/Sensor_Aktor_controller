@@ -11,6 +11,10 @@ import (
 	"google.golang.org/grpc"
 )
 
+var (
+	port = ":9090"
+)
+
 func main() {
 	// OS signals to wait for
 	sigs := make(chan os.Signal, 1)
@@ -22,7 +26,7 @@ func main() {
 	logger.Info("starting DB")
 
 	// databases own address
-	lis, err := net.Listen("tcp", ":9090")
+	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		logger.Fatal("failed to listen", zap.Error(err))
 	}
@@ -32,7 +36,7 @@ func main() {
 	grpcServer := grpc.NewServer()
 	api.RegisterDatabaseServer(grpcServer, db)
 
-	logger.Info("DB is serving...")
+	logger.Info("DB is serving on", zap.String("Port", port))
 
 	if err := grpcServer.Serve(lis); err != nil {
 		logger.Fatal("failed to serve", zap.Error(err))
