@@ -91,9 +91,17 @@ func (c *Controller) UpdateMeasurement(ctx context.Context, mes *Measurement) (*
 		if c.isErrorPresent() {
 			switch c.presentError.Type {
 			case Error_missing_packet:
-				c.actor.UpdatePosition(ctx, nil)
+				return nil, nil
 			case Error_empty:
-				c.actor.UpdatePosition(ctx, &UpdatePositionRequest{})
+				resp, err := c.actor.UpdatePosition(ctx, &UpdatePositionRequest{})
+				if err != nil {
+					c.logger.Error("error after empty position update", zap.Error(err))
+				}
+				wasEmpty = false
+				if resp.GetTime() == 0 {
+					wasEmpty = true
+				}
+				c.saveEvent(ctx, DatabaseRequest_UpdatePositionResponse, time.Now().Unix(), wasEmpty)
 			case Error_late:
 				time.Sleep(time.Second)
 			}
@@ -108,7 +116,7 @@ func (c *Controller) UpdateMeasurement(ctx context.Context, mes *Measurement) (*
 		if resp.GetTime() == 0 {
 			wasEmpty = true
 		}
-		c.saveEvent(ctx, DatabaseRequest_UpdatePositionResponse, time.Now().Unix(), false)
+		c.saveEvent(ctx, DatabaseRequest_UpdatePositionResponse, time.Now().Unix(), wasEmpty)
 	}
 	c.counter++
 	if c.isErrorPresent() {
