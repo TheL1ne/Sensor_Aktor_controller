@@ -168,11 +168,11 @@ func (c *Controller) SetError(ctx context.Context, req *ErrorRequest) (*Empty, e
 }
 
 func (c *Controller) isErrorPresent() bool {
-	if c.presentError != nil && (time.Now().Unix() < c.presentError.Time+int64(c.presentError.Milliseconds)) {
+	if c.presentError != nil && (time.Now().Unix() <= c.presentError.Time+int64(c.presentError.Milliseconds/1000)) {
 		return true
 	}
 	// reset error state
-	if c.presentError != nil && (time.Now().Unix() >= c.presentError.Time+int64(c.presentError.Milliseconds)) {
+	if c.presentError != nil && (time.Now().Unix() > c.presentError.Time+int64(c.presentError.Milliseconds/1000)) {
 		c.presentError = nil
 	}
 	return false

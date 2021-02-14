@@ -86,11 +86,11 @@ func (a *Actor) SetError(ctx context.Context, req *ErrorRequest) (*Empty, error)
 }
 
 func (a *Actor) isErrorPresent() bool {
-	if a.presentError != nil && (time.Now().Unix() < a.presentError.Time+int64(a.presentError.Milliseconds)) {
+	if a.presentError != nil && (time.Now().Unix() <= a.presentError.Time+int64(a.presentError.Milliseconds/1000)) {
 		return true
 	}
 	// reset error state
-	if a.presentError != nil && (time.Now().Unix() >= a.presentError.Time+int64(a.presentError.Milliseconds)) {
+	if a.presentError != nil && (time.Now().Unix() > a.presentError.Time+int64(a.presentError.Milliseconds/1000)) {
 		a.presentError = nil
 	}
 	return false

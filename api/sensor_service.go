@@ -75,12 +75,8 @@ func (s *Sensor) communicate(ctx context.Context) {
 			time.Sleep(time.Duration(s.intervall*2) * time.Millisecond) // sleep double the typical sending interval
 			// here sending normally afterwards -> no return
 		case Error_empty:
-			// send empty package
-			_, err := s.controller.UpdateMeasurement(ctx, nil)
-			if err != nil {
-				s.logger.Error("Nil Update to controller failed", zap.Error(err))
-			}
-			s.saveEvent(ctx, DatabaseRequest_Empty, time.Now().Unix(), false)
+			// skip as nil marshalling does not work
+			s.logger.Warn("Skipping empty packets as nil marshalling does not work")
 			return
 		case Error_flood:
 			// send everything continuously to all connected devices
@@ -110,11 +106,12 @@ func (s *Sensor) communicate(ctx context.Context) {
 }
 
 func (s *Sensor) isErrorPresent() bool {
-	if s.presentError != nil && (time.Now().Unix() < s.presentError.Time+int64(s.presentError.Milliseconds)) {
+	s.logger.Warn("time now:", zap.Int64("unix time", time.Now().Unix()))
+	if s.presentError != nil && (time.Now().Unix() <= s.presentError.Time+int64(s.presentError.Milliseconds/1000)) {
 		return true
 	}
 	// reset error state
-	if s.presentError != nil && (time.Now().Unix() >= s.presentError.Time+int64(s.presentError.Milliseconds)) {
+	if s.presentError != nil && (time.Now().Unix() > s.presentError.Time+int64(s.presentError.Milliseconds/1000)) {
 		s.presentError = nil
 	}
 	return false
