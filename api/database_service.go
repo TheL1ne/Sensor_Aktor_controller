@@ -15,12 +15,12 @@ type Database struct {
 }
 
 func NewDB(log *zap.Logger) *Database {
-	database, err := sql.Open("sqlite3", "./events.db")
+	database, err := sql.Open("sqlite3", "./anomaly.db")
 	if err != nil {
 		log.Error("could not open database", zap.Error(err))
 	}
 
-	statement, err := database.Prepare("CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY, time INTEGER, type TEXT, wasEmpty BOOL)")
+	statement, err := database.Prepare("CREATE TABLE IF NOT EXISTS anomalies(id INTEGER PRIMARY KEY, time INTEGER, type TEXT, receiver STRING, milliseconds INTEGER)")
 	if err != nil {
 		log.Error("could not prepare table creation", zap.Error(err))
 	}
@@ -29,7 +29,7 @@ func NewDB(log *zap.Logger) *Database {
 		log.Error("could not execute table creation", zap.Error(err))
 	}
 
-	statement, err = database.Prepare("INSERT INTO events (time, type, wasEmpty) VALUES (?, ?, ?)")
+	statement, err = database.Prepare("INSERT INTO anomalies (time, type, receiver, milliseconds) VALUES (?, ?, ?, ?)")
 	if err != nil {
 		log.Error("could not prepare insert statement", zap.Error(err))
 	}
@@ -41,9 +41,9 @@ func NewDB(log *zap.Logger) *Database {
 	}
 }
 
-func (db *Database) SaveEvent(ctx context.Context, dbReq *DatabaseRequest) (*Empty, error) {
-	db.logger.Info("event Received", zap.String("Type", dbReq.Type.String()), zap.String("receiver", dbReq.Receiver.String()))
-	_, err := db.insertStatement.Exec(dbReq.GetTime(), DatabaseRequest_EventType_name[int32(dbReq.Type)], dbReq.GetWasEmpty())
+func (db *Database) SaveAnomaly(ctx context.Context, dbReq *DatabaseRequest) (*Empty, error) {
+	db.logger.Info("anomaly Received", zap.String("Type", dbReq.Type.String()), zap.String("receiver", dbReq.Receiver.String()))
+	_, err := db.insertStatement.Exec(dbReq.GetTime(), Error_name[int32(dbReq.GetType())], dbReq.GetReceiver(), dbReq.GetMilliseconds())
 	if err != nil {
 		return nil, err
 	}

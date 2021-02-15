@@ -1,4 +1,4 @@
-package main
+package database
 
 import (
 	"net"
@@ -15,7 +15,7 @@ var (
 	port = ":9090"
 )
 
-func main() {
+func Start() {
 	// OS signals to wait for
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -26,7 +26,7 @@ func main() {
 	logger.Info("starting DB")
 
 	// databases own address
-	lis, err := net.Listen("tcp", port)
+	lis, err := net.Listen("tcp4", port)
 	if err != nil {
 		logger.Fatal("failed to listen", zap.Error(err))
 	}

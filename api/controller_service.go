@@ -38,20 +38,11 @@ func NewController(actor ActorClient, dbClient DatabaseClient, log *zap.Logger) 
 			if c.presentError != nil && c.presentError.Type == Error_flood {
 				c.logger.Info("start flooding")
 				for c.isErrorPresent() {
-					resp, err := c.actor.UpdatePosition(ctx, &UpdatePositionRequest{
+					_, err := c.actor.UpdatePosition(ctx, &UpdatePositionRequest{
 						Position: 3.14159,
 					})
 					if err != nil {
 						c.logger.Error("could not Update Position", zap.Error(err))
-					} else {
-						wasEmpty := false
-						if resp.GetTime() == 0 {
-							wasEmpty = true
-						}
-						err := c.saveEvent(ctx, DatabaseRequest_UpdatePositionResponse, time.Now().Unix(), wasEmpty)
-						if err != nil {
-							c.logger.Error("could not save UpdatePositionResponse to DB", zap.Error(err))
-						}
 					}
 				}
 			}
@@ -66,20 +57,7 @@ func (c *Controller) UpdateMeasurement(ctx context.Context, mes *Measurement) (*
 	c.logger.Info("UpdateMeasurement received")
 	// early return because of empty update
 	if mes == nil {
-		err := c.saveEvent(ctx, DatabaseRequest_measurement, time.Now().Unix(), true)
-		if err != nil {
-			c.logger.Error("could not save Measurementupdate", zap.Error(err))
-		}
 		return nil, fmt.Errorf("measurement update was empty")
-	}
-	// save Event
-	wasEmpty := false
-	if mes.GetTime() == 0 {
-		wasEmpty = true // struct is present but not initialized
-	}
-	err := c.saveEvent(ctx, DatabaseRequest_measurement, time.Now().Unix(), wasEmpty)
-	if err != nil {
-		c.logger.Error("could not save Measurementupdate", zap.Error(err))
 	}
 	if len(c.values) == 0 {
 		c.values = []float64{mes.GetValue()}
@@ -93,30 +71,20 @@ func (c *Controller) UpdateMeasurement(ctx context.Context, mes *Measurement) (*
 			case Error_missing_packet:
 				return nil, nil
 			case Error_empty:
-				resp, err := c.actor.UpdatePosition(ctx, &UpdatePositionRequest{})
+				_, err := c.actor.UpdatePosition(ctx, &UpdatePositionRequest{})
 				if err != nil {
 					c.logger.Error("error after empty position update", zap.Error(err))
 				}
-				wasEmpty = false
-				if resp.GetTime() == 0 {
-					wasEmpty = true
-				}
-				c.saveEvent(ctx, DatabaseRequest_UpdatePositionResponse, time.Now().Unix(), wasEmpty)
 			case Error_late:
 				time.Sleep(time.Second)
 			}
 		}
-		resp, err := c.actor.UpdatePosition(ctx, &UpdatePositionRequest{
+		_, err := c.actor.UpdatePosition(ctx, &UpdatePositionRequest{
 			Position: 3.14159,
 		})
 		if err != nil {
 			c.logger.Error("could not Update actor position", zap.Error(err))
 		}
-		wasEmpty = false
-		if resp.GetTime() == 0 {
-			wasEmpty = true
-		}
-		c.saveEvent(ctx, DatabaseRequest_UpdatePositionResponse, time.Now().Unix(), wasEmpty)
 	}
 	c.counter++
 	if c.isErrorPresent() {
@@ -134,12 +102,6 @@ func (c *Controller) UpdateMeasurement(ctx context.Context, mes *Measurement) (*
 
 func (c *Controller) GetHistory(ctx context.Context, req *GetHistoryRequest) (*GetHistoryResponse, error) {
 	c.logger.Info("GetHistory received")
-	// save Event
-	err := c.saveEvent(ctx, DatabaseRequest_historyRequest, time.Now().Unix(), false)
-	if err != nil {
-		c.logger.Error("could not save GetHistoryRequest", zap.Error(err))
-	}
-
 	// reduce history to last 1000 values
 	historyLength := 1000
 	if len(c.values) > historyLength {
@@ -163,12 +125,13 @@ func (c *Controller) GetHistory(ctx context.Context, req *GetHistoryRequest) (*G
 
 func (c *Controller) SetError(ctx context.Context, req *ErrorRequest) (*Empty, error) {
 	c.logger.Info("SetError received")
+	c.saveAnomaly(ctx, req)
 	c.presentError = req
 	return &Empty{}, nil
 }
 
 func (c *Controller) isErrorPresent() bool {
-	if c.presentError != nil && (time.Now().Unix() <= c.presentError.Time+int64(c.presentError.Milliseconds/1000)) {
+	if c.presentError != nil && (c.presentError.Time <= 0 || time.Now().Unix() <= c.presentError.Time+int64(c.presentError.Milliseconds/1000)) {
 		return true
 	}
 	// reset error state
@@ -178,12 +141,12 @@ func (c *Controller) isErrorPresent() bool {
 	return false
 }
 
-func (c *Controller) saveEvent(ctx context.Context, Etype DatabaseRequest_EventType, time int64, wasEmpty bool) error {
-	_, err := c.database.SaveEvent(ctx, &DatabaseRequest{
-		Time:     time,
-		Type:     Etype,
-		WasEmpty: wasEmpty,
-		Receiver: DatabaseRequest_controller,
+func (c *Controller) saveAnomaly(ctx context.Context, req *ErrorRequest) error {
+	_, err := c.database.SaveAnomaly(ctx, &DatabaseRequest{
+		Time:         req.Time,
+		Type:         req.Type,
+		Receiver:     DatabaseRequest_controller,
+		Milliseconds: int64(req.Milliseconds),
 	})
 	return err
 }

@@ -1,4 +1,4 @@
-package main
+package controller
 
 import (
 	"net"
@@ -10,22 +10,22 @@ import (
 )
 
 var (
-	port = ":9000"
+	port = ":9010"
 )
 
-func main() {
+func Start() {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 	logger.Info("Starting Controller")
 
 	// controllers own address
-	lis, err := net.Listen("tcp", port)
+	lis, err := net.Listen("tcp4", port)
 	if err != nil {
 		logger.Fatal("Starting TCP-Listener failed", zap.Error(err))
 	}
 
 	// connection to actor
-	conn, err := grpc.Dial("actor:8080", grpc.WithInsecure())
+	conn, err := grpc.Dial("127.0.0.1:9000", grpc.WithInsecure())
 	if err != nil {
 		logger.Fatal("could not dial to Actor", zap.Error(err))
 	}
@@ -33,7 +33,7 @@ func main() {
 	actor := api.NewActorClient(conn)
 
 	// connection to database
-	dbconn, err := grpc.Dial("database:9090", grpc.WithInsecure())
+	dbconn, err := grpc.Dial("127.0.0.1:9090", grpc.WithInsecure())
 	if err != nil {
 		logger.Fatal("could not dial to database", zap.Error(err))
 	}

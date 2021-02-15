@@ -76,10 +76,10 @@
     </SubClassOf>
     <SubClassOf>
         <Class IRI="#Typ_B_(Actor)"/>
-        <ObjectSomeValuesFrom>
+        <ObjectMaxCardinality cardinality="1">
             <ObjectProperty IRI="#receivesPositionRequestFrom"/>
             <Class IRI="#Typ_C_(Controller)"/>
-        </ObjectSomeValuesFrom>
+        </ObjectMaxCardinality>
     </SubClassOf>
     <SubClassOf>
         <Class IRI="#Typ_C_(Controller)"/>

@@ -47,25 +47,30 @@ message GetHistoryResponse {
 }
 
 message DatabaseRequest {
-    enum EventType {
-        measurement = 0;
-        historyRequest = 1;
-        historyResponse = 2;
-        ErrorRequest = 3;
-        Empty = 4;
-        UpdatePositionRequest = 5;
-        UpdatePositionResponse = 6;
-        GetPositioneResponse = 7;
-    }
     enum Receiver {
         controller = 0;
         actor = 1;
         sensor = 2;
     }
     int64 time = 1;
-    EventType type = 2;
-    bool wasEmpty = 3;
+    Error type = 2;
     Receiver receiver = 4;
+    int64 milliseconds = 5;
+}
+
+message UpdatePositionRequest {
+    int64 time = 1;
+    double position = 2;
+}
+
+message UpdatePositionResponse {
+    int64 time = 1;
+    double reached_position = 2;
+}
+
+message GetPositionResponse {
+    int64 time = 1;
+    double position = 2;
 }
 
 service Controller {
@@ -88,21 +93,6 @@ service Controller {
             post: "/seterror"
         };
     }
-}
-
-message UpdatePositionRequest {
-    int64 time = 1;
-    double position = 2;
-}
-
-message UpdatePositionResponse {
-    int64 time = 1;
-    double reached_position = 2;
-}
-
-message GetPositionResponse {
-    int64 time = 1;
-    double position = 2;
 }
 
 // placeholder for any service which has a SetErrorMethod
@@ -144,7 +134,7 @@ service Sensor {
 }
 
 service Database {
-    rpc SaveEvent(DatabaseRequest) returns (Empty) {
+    rpc SaveAnomaly(DatabaseRequest) returns (Empty) {
         option (google.api.http) = {
             post: "/saveevent"
         };

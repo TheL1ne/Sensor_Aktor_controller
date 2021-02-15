@@ -12,9 +12,9 @@ import (
 
 var (
 	adress         = "127.0.0.1"
-	actorPort      = ":8080"
-	controllerPort = ":9000"
-	sensorPort     = ":8081"
+	actorPort      = ":9000"
+	controllerPort = ":9010"
+	sensorPort     = ":9020"
 
 	actorTarget      = "actor"
 	controllerTarget = "controller"

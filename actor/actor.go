@@ -1,4 +1,4 @@
-package main
+package actor
 
 import (
 	"net"
@@ -9,21 +9,21 @@ import (
 )
 
 var (
-	port = ":8080"
+	port = ":9000"
 )
 
-func main() {
+func Start() {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 	// actors address
-	lis, err := net.Listen("tcp", port)
+	lis, err := net.Listen("tcp4", port)
 	if err != nil {
 		logger.Fatal("failed to listen", zap.Error(err))
 	}
 	logger.Info("starting actor serving on", zap.String("Port", port))
 
 	// connection to database
-	dbconn, err := grpc.Dial("database:9090", grpc.WithInsecure())
+	dbconn, err := grpc.Dial("127.0.0.1:9090", grpc.WithInsecure())
 	if err != nil {
 		logger.Fatal("could not dial to database", zap.Error(err))
 	}

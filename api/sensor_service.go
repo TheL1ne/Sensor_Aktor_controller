@@ -57,7 +57,7 @@ func (s *Sensor) StartSensor() chan bool {
 
 func (s *Sensor) SetError(ctx context.Context, req *ErrorRequest) (*Empty, error) {
 	s.logger.Info("SetError received")
-	err := s.saveEvent(ctx, DatabaseRequest_ErrorRequest, req.GetTime(), false)
+	err := s.saveEvent(ctx, req)
 	if err != nil {
 		s.logger.Error("could not save ErrorEvent", zap.Error(err))
 	}
@@ -72,7 +72,7 @@ func (s *Sensor) communicate(ctx context.Context) {
 		case Error_missing_packet:
 			return
 		case Error_late:
-			time.Sleep(time.Duration(s.intervall*2) * time.Millisecond) // sleep double the typical sending interval
+			time.Sleep(time.Duration(s.intervall*10) * time.Millisecond) // sleep double the typical sending interval
 			// here sending normally afterwards -> no return
 		case Error_empty:
 			// skip as nil marshalling does not work
@@ -89,7 +89,6 @@ func (s *Sensor) communicate(ctx context.Context) {
 				if err != nil {
 					s.logger.Error("flooding event to controller failed", zap.Error(err))
 				}
-				s.saveEvent(ctx, DatabaseRequest_Empty, time.Now().Unix(), false)
 			}
 		}
 	}
@@ -102,12 +101,10 @@ func (s *Sensor) communicate(ctx context.Context) {
 	if err != nil {
 		s.logger.Error("Update to controller failed", zap.Error(err))
 	}
-	s.saveEvent(ctx, DatabaseRequest_Empty, time.Now().Unix(), false)
 }
 
 func (s *Sensor) isErrorPresent() bool {
-	s.logger.Warn("time now:", zap.Int64("unix time", time.Now().Unix()))
-	if s.presentError != nil && (time.Now().Unix() <= s.presentError.Time+int64(s.presentError.Milliseconds/1000)) {
+	if s.presentError != nil && (s.presentError.Time <= 0 || time.Now().Unix() <= s.presentError.Time+int64(s.presentError.Milliseconds/1000)) {
 		return true
 	}
 	// reset error state
@@ -117,12 +114,12 @@ func (s *Sensor) isErrorPresent() bool {
 	return false
 }
 
-func (s *Sensor) saveEvent(ctx context.Context, Etype DatabaseRequest_EventType, time int64, wasEmpty bool) error {
-	_, err := s.database.SaveEvent(ctx, &DatabaseRequest{
-		Time:     time,
-		Type:     Etype,
-		WasEmpty: wasEmpty,
-		Receiver: DatabaseRequest_sensor,
+func (s *Sensor) saveEvent(ctx context.Context, req *ErrorRequest) error {
+	_, err := s.database.SaveAnomaly(ctx, &DatabaseRequest{
+		Time:         req.Time,
+		Type:         req.Type,
+		Receiver:     DatabaseRequest_sensor,
+		Milliseconds: int64(req.Milliseconds),
 	})
 	return err
 }

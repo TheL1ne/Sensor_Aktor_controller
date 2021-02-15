@@ -26,18 +26,8 @@ func NewActor(dbC DatabaseClient, log *zap.Logger) (*Actor, error) {
 func (a *Actor) UpdatePosition(ctx context.Context, req *UpdatePositionRequest) (*UpdatePositionResponse, error) {
 	a.logger.Info("Updatepositionrequest received")
 	if req == nil {
-		err := a.saveEvent(ctx, DatabaseRequest_UpdatePositionRequest, time.Now().Unix(), true)
-		if err != nil {
-			a.logger.Error("could not save Event to database", zap.Error(err), zap.Any("Request", req))
-		}
 		return nil, fmt.Errorf("Positionupdate was empty")
-	} else {
-		err := a.saveEvent(ctx, DatabaseRequest_UpdatePositionRequest, req.GetTime(), false)
-		if err != nil {
-			a.logger.Error("could not save Event to database", zap.Error(err), zap.Any("Request", req))
-		}
 	}
-
 	if a.isErrorPresent() {
 		switch a.presentError.Type {
 		// skipped 2 errors because:
@@ -60,16 +50,6 @@ func (a *Actor) UpdatePosition(ctx context.Context, req *UpdatePositionRequest) 
 
 func (a *Actor) GetPosition(context context.Context, req *Empty) (*GetPositionResponse, error) {
 	a.logger.Info("GetPositionRequest received")
-	wasEmpty := false
-	if req == nil {
-		wasEmpty = true
-	}
-
-	err := a.saveEvent(context, DatabaseRequest_Empty, time.Now().Unix(), wasEmpty)
-	if err != nil {
-		a.logger.Error("could not save Event to database", zap.Error(err), zap.Any("Request", req))
-	}
-
 	return &GetPositionResponse{
 		Position: a.position,
 	}, nil
@@ -77,7 +57,7 @@ func (a *Actor) GetPosition(context context.Context, req *Empty) (*GetPositionRe
 
 func (a *Actor) SetError(ctx context.Context, req *ErrorRequest) (*Empty, error) {
 	a.logger.Info("Errorrequest received")
-	err := a.saveEvent(ctx, DatabaseRequest_ErrorRequest, req.GetTime(), false)
+	err := a.saveAnomaly(ctx, req)
 	if err != nil {
 		a.logger.Error("could not save Event to database", zap.Error(err), zap.Any("Request", req))
 	}
@@ -86,7 +66,7 @@ func (a *Actor) SetError(ctx context.Context, req *ErrorRequest) (*Empty, error)
 }
 
 func (a *Actor) isErrorPresent() bool {
-	if a.presentError != nil && (time.Now().Unix() <= a.presentError.Time+int64(a.presentError.Milliseconds/1000)) {
+	if a.presentError != nil && (a.presentError.Time <= 0 || time.Now().Unix() <= a.presentError.Time+int64(a.presentError.Milliseconds/1000)) {
 		return true
 	}
 	// reset error state
@@ -96,12 +76,12 @@ func (a *Actor) isErrorPresent() bool {
 	return false
 }
 
-func (a *Actor) saveEvent(ctx context.Context, Etype DatabaseRequest_EventType, time int64, wasEmpty bool) error {
-	_, err := a.database.SaveEvent(ctx, &DatabaseRequest{
-		Time:     time,
-		Type:     Etype,
-		WasEmpty: wasEmpty,
-		Receiver: DatabaseRequest_actor,
+func (a *Actor) saveAnomaly(ctx context.Context, req *ErrorRequest) error {
+	_, err := a.database.SaveAnomaly(ctx, &DatabaseRequest{
+		Time:         req.Time,
+		Type:         req.Type,
+		Receiver:     DatabaseRequest_controller,
+		Milliseconds: int64(req.Milliseconds),
 	})
 	return err
 }
