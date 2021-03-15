@@ -9,7 +9,6 @@
 		  <groupId>net.sourceforge.owlapi</groupId>
 		  <artifactId>owlapi-distribution</artifactId>
 		  <version>5.1.17</version>
-		  <type>bundle</type>
 	</dependency>
   	<dependency>
 		<groupId>com.github.galigator.openllet</groupId>

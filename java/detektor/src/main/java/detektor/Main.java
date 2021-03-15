@@ -1,22 +1,12 @@
 package detektor;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-
 import org.jnetpcap.Pcap;
 import org.jnetpcap.PcapIf;
 import org.jnetpcap.packet.PcapPacket;
 import org.jnetpcap.packet.PcapPacketHandler;
-import org.jnetpcap.protocol.network.Ip4;
 import org.jnetpcap.protocol.tcpip.Tcp;
-import org.semanticweb.owlapi.apibinding.OWLManager;
-import org.semanticweb.owlapi.model.OWLOntology;
-import org.semanticweb.owlapi.model.OWLOntologyManager;
-
-import openllet.owlapi.OpenlletReasoner;
-import openllet.owlapi.OpenlletReasonerFactory;
 
 public class Main {
 	static int slotMilliSec = 2 * 1000; // seconds we wait until we start a new slot
